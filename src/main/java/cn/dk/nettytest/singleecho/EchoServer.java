@@ -16,13 +16,13 @@ public class EchoServer {
         this.port = port;
     }
 
-    public static void main(String[] args) {
-        if (args.length != 1){
+    public static void main(String[] args) throws InterruptedException {
+        if (args.length != 1) {
             System.out.println("Usage:" + EchoServer.class.getSimpleName() + "<port>");
             return;
         }
         int port = Integer.parseInt(args[0]);
-        new EchoServer(port);
+        new EchoServer(port).start();
     }
 
     public void start() throws InterruptedException {
@@ -30,14 +30,17 @@ public class EchoServer {
         EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
-            bootstrap.group(eventLoopGroup).channel(NioServerSocketChannel.class).localAddress(port).childHandler(new ChannelInitializer<SocketChannel>() {
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    ch.pipeline().addLast(echoServerHandler);
-                }
-            });
+            bootstrap.group(eventLoopGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .localAddress(port)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        protected void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(echoServerHandler);
+                        }
+                    });
             ChannelFuture future = bootstrap.bind().sync();
             future.channel().closeFuture().sync();
-        }finally {
+        } finally {
             eventLoopGroup.shutdownGracefully().sync();
         }
     }
